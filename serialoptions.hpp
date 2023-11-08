@@ -22,7 +22,7 @@ public:
 
 signals:
     void baudrateChanged(qint32 &new_rate);
-    void portChanged(const QString &val);
+    void portChanged(const std::string &val);
 
 
 private slots:

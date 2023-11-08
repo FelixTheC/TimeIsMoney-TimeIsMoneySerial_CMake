@@ -7,6 +7,7 @@ SerialOptions::SerialOptions(QWidget *parent) :
     ui(new Ui::SerialOptions)
 {
     ui->setupUi(this);
+    
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &SerialOptions::handle_accepted);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &SerialOptions::close);
     connect(ui->comboBox, &QComboBox::currentTextChanged, this, &SerialOptions::handlePortChanged);
@@ -72,13 +73,13 @@ SerialOptions::initBaudRateOptions()
         auto current_index = ui->comboBox_2->findText(QString::number(user_baudrate));
         ui->comboBox_2->setCurrentIndex(current_index);
     }
-
 }
 
 void
 SerialOptions::handle_accepted()
 {
-    qint32 new_rate = ui->comboBox_2->itemText(ui->comboBox_2->currentIndex()).toInt();
+    auto new_rate = ui->comboBox_2->itemText(ui->comboBox_2->currentIndex()).toInt();
+    auto new_port = ui->comboBox->itemText(ui->comboBox->currentIndex()).toStdString();
     if (new_rate != default_baudrate && new_rate != user_baudrate)
     {
         user_baudrate = new_rate;
@@ -89,6 +90,9 @@ SerialOptions::handle_accepted()
 void
 SerialOptions::handlePortChanged(const QString &val)
 {
-    selected_port_name = val;
-    emit portChanged(selected_port_name);
+    if (val != selected_port_name)
+    {
+        selected_port_name = val;
+        emit portChanged(val.toStdString());
+    }
 }

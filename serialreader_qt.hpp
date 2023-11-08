@@ -23,6 +23,7 @@ public Q_SLOTS:
     bool isOpen();
     void read_line();
     void changeBaudrate(qint32 &val);
+    void changePort(const std::string &val);
 
 private:
     bool open = false;

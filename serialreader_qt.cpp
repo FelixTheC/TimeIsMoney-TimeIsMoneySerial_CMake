@@ -69,7 +69,15 @@ SerialReader_QT::changeBaudrate(qint32 &val)
     if (serial_port && serial_port->isOpen())
     {
         serial_port->setBaudRate(val);
+        serial_port->close();
     }
+}
+
+void
+SerialReader_QT::changePort(const std::string &val)
+{
+    usb_port = QString::fromStdString(val);
+    initSerialReading();
 }
 
 bool
