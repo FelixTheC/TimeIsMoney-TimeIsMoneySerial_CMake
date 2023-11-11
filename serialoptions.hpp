@@ -5,6 +5,7 @@
 #include <QSerialPort>
 #include <QSerialPortInfo>
 #include <QSharedPointer>
+#include <QSqlDatabase>
 
 
 namespace Ui {
@@ -16,9 +17,11 @@ class SerialOptions : public QDialog
     Q_OBJECT
 
 public:
-    explicit SerialOptions(QWidget *parent = nullptr);
+    explicit SerialOptions(QSharedPointer<QSqlDatabase> &db, QWidget *parent = nullptr);
     ~SerialOptions() override;
     static QString getFirstPortName();
+    [[ nodiscard ]] qint32 getUserBaudrate() const noexcept;
+    [[ nodiscard ]] QString getSelectedPortName() noexcept;
 
 signals:
     void baudrateChanged(qint32 &new_rate);
@@ -31,6 +34,8 @@ private slots:
 
 private:
     Ui::SerialOptions *ui;
+    QSharedPointer<QSqlDatabase> db;
+    
     void initPortOptions();
     void initBaudRateOptions();
 

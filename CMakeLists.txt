@@ -13,45 +13,104 @@ set(CMAKE_PREFIX_PATH "/home/felix/Qt/6.5.0/gcc_64")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 set(IsLibrary ON)
+set(TESTING OFF)
 
-find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets SerialPort)
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets SerialPort)
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core Widgets SerialPort Sql)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Widgets SerialPort Sql)
 
-if (IsLibrary)
-set(PROJECT_SOURCES
-        serialoptions.cpp
-        serialoptions.hpp
-        serialoptions.ui
-        serialreader_qt.cpp
-        serialreader_qt.hpp
-)
+if (TESTING)
+    enable_testing()
+
+    include(FetchContent)
+    FetchContent_Declare(
+            googletest
+            GIT_REPOSITORY https://github.com/google/googletest.git
+            GIT_TAG        f8d7d77c06936315286eb55f8de22cd23c188571 # release-1.10.0
+    )
+
+    FetchContent_MakeAvailable(googletest)
+
+    link_directories(
+            /home/felix/QtProjects/TimeIsMoney_CMake/TimeIsMoney-TimeIsMoneyDB_CMake
+    )
+    include_directories(
+            ${GTEST_INCLUDE_DIRS}
+            /home/felix/QtProjects/TimeIsMoney_CMake/TimeIsMoney-TimeIsMoneyDB_CMake
+    )
+
+    qt_add_executable(TimeIsMoneySerial_CMake
+            MANUAL_FINALIZATION
+            tests/testmain.cpp
+            tests/test_db.cpp
+            serialoptions.cpp
+            serialoptions.hpp
+            serialoptions.ui
+            serialreader_qt.cpp
+            serialreader_qt.hpp
+            serial_db.cpp
+            serial_db.hpp
+    )
+    target_link_libraries(TimeIsMoneySerial_CMake
+            PRIVATE
+            gtest_main
+            Qt${QT_VERSION_MAJOR}::Core
+            Qt${QT_VERSION_MAJOR}::Widgets
+            Qt${QT_VERSION_MAJOR}::SerialPort
+            Qt${QT_VERSION_MAJOR}::Sql
+            /home/felix/QtProjects/TimeIsMoney_CMake/cmake-build-debug/TimeIsMoney-TimeIsMoneyDB_CMake/libTimeIsMoneyDB_CMake.so
+    )
+
+    include(GoogleTest)
+    gtest_discover_tests(${PROJECT_NAME})
 else ()
-set(PROJECT_SOURCES
-        main.cpp
-        serialoptions.cpp
-        serialoptions.hpp
-        serialoptions.ui
-        serialreader_qt.cpp
-        serialreader_qt.hpp
-)
+
+    if (IsLibrary)
+    set(PROJECT_SOURCES
+            serialoptions.cpp
+            serialoptions.hpp
+            serialoptions.ui
+            serialreader_qt.cpp
+            serialreader_qt.hpp
+            serial_db.cpp
+            serial_db.hpp
+    )
+    else ()
+    set(PROJECT_SOURCES
+            main.cpp
+            serialoptions.cpp
+            serialoptions.hpp
+            serialoptions.ui
+            serialreader_qt.cpp
+            serialreader_qt.hpp
+            serial_db.cpp
+            serial_db.hpp
+    )
+    endif ()
+
+    if (IsLibrary)
+        add_library(TimeIsMoneySerial_CMake
+                SHARED
+                ${PROJECT_SOURCES}
+        )
+        target_link_libraries(TimeIsMoneySerial_CMake
+                PRIVATE
+                Qt${QT_VERSION_MAJOR}::Core
+                Qt${QT_VERSION_MAJOR}::Widgets
+                Qt${QT_VERSION_MAJOR}::SerialPort
+                Qt${QT_VERSION_MAJOR}::Sql
+        )
+    else ()
+        add_executable(TimeIsMoneySerial_CMake ${PROJECT_SOURCES})
+        target_link_libraries(TimeIsMoneySerial_CMake
+                PRIVATE
+                Qt${QT_VERSION_MAJOR}::Core
+                Qt${QT_VERSION_MAJOR}::Widgets
+                Qt${QT_VERSION_MAJOR}::SerialPort
+                Qt${QT_VERSION_MAJOR}::Sql
+                /home/felix/QtProjects/TimeIsMoney_CMake/cmake-build-debug/TimeIsMoney-TimeIsMoneyDB_CMake/libTimeIsMoneyDB_CMake.so
+        )
+    endif ()
 endif ()
-
-if (IsLibrary)
-add_library(TimeIsMoneySerial_CMake
-        SHARED
-        ${PROJECT_SOURCES}
-)
-else ()
-    add_executable(TimeIsMoneySerial_CMake ${PROJECT_SOURCES})
-endif ()
-
-target_link_libraries(TimeIsMoneySerial_CMake
-        PRIVATE
-        Qt${QT_VERSION_MAJOR}::Core
-        Qt${QT_VERSION_MAJOR}::Widgets
-        Qt${QT_VERSION_MAJOR}::SerialPort
-)
-
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an
 # explicit, fixed bundle identifier manually though.

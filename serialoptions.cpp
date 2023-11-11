@@ -1,8 +1,9 @@
 #include "serialoptions.hpp"
+#include "serial_db.hpp"
 #include "ui_serialoptions.h"
 
 
-SerialOptions::SerialOptions(QWidget *parent) :
+SerialOptions::SerialOptions(QSharedPointer<QSqlDatabase> &db_, QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SerialOptions)
 {
@@ -11,6 +12,15 @@ SerialOptions::SerialOptions(QWidget *parent) :
     connect(ui->buttonBox, &QDialogButtonBox::accepted, this, &SerialOptions::handle_accepted);
     connect(ui->buttonBox, &QDialogButtonBox::rejected, this, &SerialOptions::close);
     connect(ui->comboBox, &QComboBox::currentTextChanged, this, &SerialOptions::handlePortChanged);
+    
+    this->db = db_;
+    
+    if (count_serial_setup(db) > 0)
+    {
+        auto last_setup = select_latest_pk_serial_setup(db);
+        this->user_baudrate = static_cast<qint32>(last_setup.baudrate);
+        this->selected_port_name = QString::fromStdString(last_setup.port_name);
+    }
 
     initPortOptions();
     initBaudRateOptions();
@@ -79,11 +89,27 @@ void
 SerialOptions::handle_accepted()
 {
     auto new_rate = ui->comboBox_2->itemText(ui->comboBox_2->currentIndex()).toInt();
-    auto new_port = ui->comboBox->itemText(ui->comboBox->currentIndex()).toStdString();
-    if (new_rate != default_baudrate && new_rate != user_baudrate)
+    auto new_port = ui->comboBox->itemText(ui->comboBox->currentIndex());
+    
+    if (new_rate != user_baudrate)
     {
         user_baudrate = new_rate;
         emit baudrateChanged(new_rate);
+    }
+    
+    if (new_port != selected_port_name)
+    {
+        selected_port_name = new_port;
+        emit portChanged(selected_port_name.toStdString());
+    }
+    
+    if (count_serial_setup(db) == 0)
+    {
+        create_serial_setup_entry(db, user_baudrate, selected_port_name.toStdString());
+    }
+    else
+    {
+        update_serial_setup(db, user_baudrate, selected_port_name.toStdString());
     }
 }
 
@@ -95,4 +121,14 @@ SerialOptions::handlePortChanged(const QString &val)
         selected_port_name = val;
         emit portChanged(val.toStdString());
     }
+}
+
+qint32 SerialOptions::getUserBaudrate() const noexcept
+{
+    return user_baudrate;
+}
+
+QString SerialOptions::getSelectedPortName() noexcept
+{
+    return selected_port_name;
 }

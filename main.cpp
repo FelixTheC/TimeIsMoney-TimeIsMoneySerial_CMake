@@ -1,11 +1,19 @@
+#include <QApplication>
+
+#include "../TimeIsMoney-TimeIsMoneyDB_CMake/include/taskdb.hpp"
+
 #include "serialoptions.hpp"
 
-#include <QApplication>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    SerialOptions w;
+    
+    auto tmp_db = TaskDB("test_timeismoney_serial");
+    auto db_ = tmp_db.getDBPtr();
+    
+    SerialOptions w {db_};
     w.show();
+    
     return a.exec();
 }
