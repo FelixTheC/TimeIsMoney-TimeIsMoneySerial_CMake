@@ -39,28 +39,12 @@ void
 SerialReader_QT::read_line()
 {
     QByteArray raw_bytes = serial_port->read(64);
-    QByteArray bytes {};
-
-    if (raw_bytes.size() == 38)
+    std::string received_uuid = raw_bytes.toStdString();
+    if (received_uuid[received_uuid.size() - 1] == '\n')
     {
-        std::transform(raw_bytes.begin(),
-                       raw_bytes.end() - 2,
-                       std::back_inserter(bytes),
-                       [](auto chr){return chr;}
-                       );
-        std::string uuid = bytes.toStdString();
-        emit serialValueReceived(uuid);
+        received_uuid = received_uuid.substr(0, received_uuid.size() - 1);
     }
-    else if (raw_bytes.size() == 1)
-    {
-        received_uuid.append(raw_bytes);
-        std::string uuid = received_uuid.toStdString();
-        if (uuid.size() == 36)
-            emit serialValueReceived(uuid);
-
-        if (uuid.size() >= 37)
-            received_uuid.clear();
-    }
+    emit serialValueReceived(received_uuid);
 }
 
 void
